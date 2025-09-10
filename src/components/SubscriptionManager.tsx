@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { refreshUserData } from '@/lib/subscription-utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,18 +50,19 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
   const handleRefreshData = async () => {
     setIsLoading(true);
     try {
-      const { forceRefreshUserData } = await import('@/lib/subscription-utils');
-      const refreshedUser = await forceRefreshUserData(user.id);
-      if (refreshedUser) {
-        onUpdateUser(refreshedUser);
+      // Simple refresh from localStorage - no backend needed for now
+      const savedUser = localStorage.getItem('lovable_user');
+      if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        onUpdateUser(userData);
         toast({
           title: "הנתונים עודכנו",
-          description: "סטטוס המנוי והטוקנים עודכנו מהשרת"
+          description: "הנתונים נטענו מחדש מהמערכת"
         });
       } else {
         toast({
-          title: "לא ניתן לעדכן",
-          description: "לא נמצאו נתונים בשרת",
+          title: "לא ניתן לעדכן", 
+          description: "לא נמצאו נתונים שמורים",
           variant: "destructive"
         });
       }

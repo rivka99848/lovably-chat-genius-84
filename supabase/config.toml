@@ -1,4 +1,0 @@
-project_id = "tynnedxpecphluxeaxqr"
-
-[functions.forward-payment]
-verify_jwt = false

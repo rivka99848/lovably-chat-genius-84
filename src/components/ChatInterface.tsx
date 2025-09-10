@@ -7,13 +7,17 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { getToken, setToken, clearToken, fetchWithAuth, extractToken } from '@/lib/auth';
-import { 
-  createChatSession, 
-  getChatSessions, 
-  updateChatSessionLastMessage, 
-  deleteChatSession,
-  type ChatSession 
-} from '@/lib/supabase';
+
+// Chat Session interface
+interface ChatSession {
+  id: string;
+  user_id: string;
+  session_id: string;
+  title: string;
+  last_message_at: string;
+  created_at: string;
+  updated_at: string;
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,7 +159,7 @@ const ChatInterface = () => {
 
   const loadSavedConversations = async (userId: string) => {
     try {
-      // Use localStorage as primary storage since Supabase RLS fails
+      // Load conversations from localStorage  
       const saved = localStorage.getItem(`lovable_conversations_${userId}`);
       if (saved) {
         const conversations = JSON.parse(saved);
