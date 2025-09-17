@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, CreditCard, LogOut, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Settings, CreditCard, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { clearToken } from '@/lib/auth';
 import ContactForm from './ContactForm';
@@ -23,6 +24,7 @@ interface User {
   plan: 'free' | 'pro' | 'enterprise';
   messagesUsed: number;
   messageLimit: number;
+  profileImage?: string;
 }
 
 interface ProfileDropdownProps {
@@ -36,6 +38,16 @@ const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
   if (!user) {
     return null;
   }
+
+  // Get user initials for fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const handleSettingsClick = () => {
     console.log('Settings clicked');
@@ -71,9 +83,14 @@ const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center space-x-2 space-x-reverse">
-          <User className="w-5 h-5" />
-          <span className="hidden md:inline">{user.name}</span>
+        <Button variant="ghost" className="flex items-center space-x-2 space-x-reverse p-1 h-auto">
+          <Avatar className="w-8 h-8">
+            <AvatarImage src={user.profileImage} alt={user.name} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="hidden md:inline text-foreground">{user.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border shadow-lg">

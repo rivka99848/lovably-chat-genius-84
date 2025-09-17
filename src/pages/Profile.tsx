@@ -16,6 +16,7 @@ interface User {
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;
   subscriptionEndDate?: Date;
+  profileImage?: string;
 }
 
 const Profile = () => {

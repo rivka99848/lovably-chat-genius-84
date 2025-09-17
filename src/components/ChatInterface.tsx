@@ -50,6 +50,7 @@ interface User {
   subscriptionStartDate?: Date;
   subscriptionEndDate?: Date;
   registrationDate?: string;
+  profileImage?: string;
 }
 
 const ChatInterface = () => {
@@ -106,17 +107,19 @@ const ChatInterface = () => {
   };
 
   useEffect(() => {
-    // Check for existing user session
+    // Load user from localStorage with profile image
     const savedUser = localStorage.getItem('lovable_user');
     if (savedUser) {
       const userData = JSON.parse(savedUser);
+      // Add default profile image if not exists
+      if (!userData.profileImage) {
+        userData.profileImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=0D8043&color=fff`;
+        localStorage.setItem('lovable_user', JSON.stringify(userData));
+      }
       setUser(userData);
-      loadChatHistory();
-      loadSavedConversations(userData.id);
-      // Restore existing session ID or create new one
-      restoreSessionId();
     } else {
-      setShowAuth(true);
+      // Redirect to home if no user found
+      navigate('/');
     }
     
     // Load theme preference
@@ -218,7 +221,8 @@ const ChatInterface = () => {
               plan: userData.plan || 'free',
               messagesUsed: userData.messagesUsed || 0,
               messageLimit: userData.messageLimit || 50,
-              registrationDate: new Date().toISOString()
+              registrationDate: new Date().toISOString(),
+              profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8043&color=fff`
             };
             
             setUser(newUser);
@@ -280,7 +284,8 @@ const ChatInterface = () => {
               plan: userData.plan || 'free',
               messagesUsed: userData.messagesUsed || 0,
               messageLimit: userData.messageLimit || 50,
-              registrationDate: userData.registrationDate || new Date().toISOString()
+              registrationDate: userData.registrationDate || new Date().toISOString(),
+              profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || name)}&background=0D8043&color=fff`
             };
             
             setUser(existingUser);
