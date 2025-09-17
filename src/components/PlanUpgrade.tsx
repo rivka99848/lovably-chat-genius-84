@@ -50,41 +50,39 @@ interface Props {
   isDarkMode: boolean;
 }
 
-const PlanUpgrade = ({ isOpen, onClose, user, onUpdateUser, isDarkMode }: Props) => {
+const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isDarkMode }) => {
   // Guard against null user
   if (!user) {
     return null;
   }
 
   const packages: Package[] = [
-  {
-    id: '1',
-    name: 'חבילה חינם',
-    price: 0,
-    messageLimit: 50,
-    features: ['50 טוקנים חינם', 'תמיכה בסיסית', 'גישה לכל התכונות הבסיסיות'],
-    type: 'free'
-  },
-  {
-    id: '2',
-    name: 'חבילה בסיסית',
-    price: 15,
-    messageLimit: 300000,
-    features: ['300,000 טוקנים', 'תמיכה מועדפת', 'גישה מוקדמת לתכונות', 'ייצוא שיחות', 'אולוית עדיפות'],
-    type: 'pro',
-    popular: true
-  },
-  {
-    id: '3',
-    name: 'חבילה מתקדמת',
-    price: 25,
-    messageLimit: 600000,
-    features: ['600,000 טוקנים', 'תמיכה', 'נהל מרובה', 'ניתוח תמונות', ],
-    type: 'enterprise'
-  }
-];
-
-const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isDarkMode }) => {
+    {
+      id: '1',
+      name: 'חבילה חינם',
+      price: 0,
+      messageLimit: 50,
+      features: ['50 טוקנים חינם', 'תמיכה בסיסית', 'גישה לכל התכונות הבסיסיות'],
+      type: 'free'
+    },
+    {
+      id: '2',
+      name: 'חבילה בסיסית',
+      price: 15,
+      messageLimit: 300000,
+      features: ['300,000 טוקנים', 'תמיכה מועדפת', 'גישה מוקדמת לתכונות', 'ייצוא שיחות', 'אולוית עדיפות'],
+      type: 'pro',
+      popular: true
+    },
+    {
+      id: '3',
+      name: 'חבילה מתקדמת',
+      price: 25,
+      messageLimit: 600000,
+      features: ['600,000 טוקנים', 'תמיכה', 'נהל מרובה', 'ניתוח תמונות'],
+      type: 'enterprise'
+    }
+  ];
   const [paymentIframeOpen, setPaymentIframeOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
 
