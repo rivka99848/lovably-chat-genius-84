@@ -70,6 +70,7 @@ const ProfileDropdown = ({ user }: ProfileDropdownProps) => {
     localStorage.removeItem('lovable_user');
     localStorage.removeItem('lovable_chat_history');
     localStorage.removeItem('lovable_session_id');
+    localStorage.removeItem('lovable_current_session_id');
     
     toast({
       title: "התנתקת בהצלחה",

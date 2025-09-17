@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, User, Settings, Crown, Upload, Moon, Sun, LogOut, CreditCard, Menu, X, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import BotStatusIndicator from './BotStatusIndicator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -117,9 +117,12 @@ const ChatInterface = () => {
         localStorage.setItem('lovable_user', JSON.stringify(userData));
       }
       setUser(userData);
+      loadChatHistory();
+      loadSavedConversations(userData.id);
+      // Restore existing session ID or create new one
+      restoreSessionId();
     } else {
-      // Redirect to home if no user found
-      navigate('/');
+      setShowAuth(true);
     }
     
     // Load theme preference
@@ -806,7 +809,9 @@ const ChatInterface = () => {
   }
 
   return (
-    <div className={`flex h-screen premium-gradient ${isDarkMode ? 'dark text-white' : 'text-gray-900'}`} dir="rtl">
+    <div className={`chat-container flex h-screen premium-gradient ${isDarkMode ? 'dark text-white' : 'text-gray-900'}`} dir="rtl">
+      <div className="chat-background-decoration" />
+      
       {/* Sidebar */}
       {isSidebarOpen && (
         <div className={`w-80 border-l backdrop-blur-xl flex flex-col transition-all duration-300 bg-gray-900 ${

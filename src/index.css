@@ -53,6 +53,14 @@ All colors MUST be HSL.
     --premium-black: 220 15% 8%;
     --premium-dark-blue: 220 100% 15%;
     --premium-gradient: linear-gradient(135deg, hsl(140 100% 12%), hsl(220 15% 8%), hsl(220 100% 15%));
+    
+    /* Enhanced design system colors */
+    --primary-glow: 140 100% 30%;
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.1);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.15);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -92,6 +100,13 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 220 15% 12%;
     --sidebar-ring: 140 100% 35%;
+    
+    /* Enhanced design system colors */
+    --primary-glow: 140 100% 35%;
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
   }
 }
 
@@ -120,5 +135,60 @@ All colors MUST be HSL.
   .premium-icon-button {
     @apply border-0 bg-transparent hover:bg-white/5 text-white/80 hover:text-white transition-all duration-200;
     backdrop-filter: blur(10px);
+  }
+
+  /* Enhanced message bubbles */
+  .message-bubble-user {
+    @apply bg-primary/10 text-foreground border border-primary/20 ml-8 rounded-2xl rounded-br-md shadow-sm;
+  }
+
+  .message-bubble-bot {
+    @apply bg-secondary/80 text-foreground border border-border mr-8 rounded-2xl rounded-bl-md shadow-sm;
+  }
+
+  .message-bubble-user.dark {
+    @apply bg-primary/20 border-primary/30;
+  }
+
+  .message-bubble-bot.dark {
+    @apply bg-secondary/60 border-border;
+  }
+
+  /* Chat container centering */
+  .chat-container {
+    @apply max-w-4xl mx-auto relative;
+  }
+
+  .chat-background-decoration {
+    @apply absolute inset-0 -z-10 opacity-30;
+    background: var(--gradient-subtle);
+  }
+
+  /* Animations */
+  @keyframes message-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message-animate {
+    animation: message-slide-in 0.3s ease-out;
+  }
+
+  /* Bot status indicator pulse */
+  @keyframes status-pulse {
+    0%, 100% { 
+      opacity: 1; 
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 0.7; 
+      transform: scale(1.05);
+    }
   }
 }

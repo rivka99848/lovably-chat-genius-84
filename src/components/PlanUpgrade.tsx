@@ -50,7 +50,13 @@ interface Props {
   isDarkMode: boolean;
 }
 
-const packages: Package[] = [
+const PlanUpgrade = ({ isOpen, onClose, user, onUpdateUser, isDarkMode }: Props) => {
+  // Guard against null user
+  if (!user) {
+    return null;
+  }
+
+  const packages: Package[] = [
   {
     id: '1',
     name: 'חבילה חינם',

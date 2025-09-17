@@ -42,7 +42,7 @@ const Subscription = () => {
     }
 
     // Load theme preference
-    const theme = localStorage.getItem('lovable_theme');
+    const theme = localStorage.getItem('theme');
     setIsDarkMode(theme === 'dark');
   }, [navigate]);
 
