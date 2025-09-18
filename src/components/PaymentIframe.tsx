@@ -3,6 +3,7 @@ import { X, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import UserDataService from '@/services/userDataService';
 
 interface Package {
   id: string;
@@ -169,36 +170,109 @@ const PaymentIframe: React.FC<PaymentIframeProps> = ({
   const handlePaymentSuccess = async (transactionId?: string) => {
     console.log('Processing payment success with TransactionId:', transactionId);
     
-    // Update user data for immediate UI feedback
-    const updatedUser = {
-      ...user,
-      plan: packageData.type,
-      messageLimit: packageData.messageLimit,
-      subscriptionStatus: 'active' as const,
-      subscriptionStartDate: new Date(),
-      subscriptionEndDate: null
-    };
+    try {
+      // Send payment confirmation to server for processing
+      const paymentData = {
+        user_id: user.id,
+        package_id: packageData.id,
+        package_name: packageData.name,
+        amount: packageData.price,
+        transaction_id: transactionId,
+        timestamp: new Date().toISOString()
+      };
 
-    // Update localStorage with subscription details
-    localStorage.setItem('lovable_user', JSON.stringify(updatedUser));
+      // Here you would typically call your payment webhook
+      // const response = await fetch('YOUR_PAYMENT_WEBHOOK_URL', { method: 'POST', body: JSON.stringify(paymentData) });
+      // const responseData = await response.json();
+      
+      // For now, simulate server response processing
+      const mockResponse = {
+        success: true,
+        user_data: {
+          ...user,
+          plan: packageData.type,
+          messageLimit: packageData.messageLimit,
+          subscriptionStatus: 'active' as const,
+          subscriptionStartDate: new Date(),
+          subscriptionEndDate: null
+        },
+        payment_record: {
+          id: transactionId || `pay_${Date.now()}`,
+          amount: packageData.price,
+          currency: 'ILS',
+          status: 'completed',
+          created_at: new Date().toISOString(),
+          plan: packageData.name,
+          description: `${packageData.name} subscription`
+        },
+        message: 'התשלום בוצע בהצלחה'
+      };
 
-    // Call parent success handler for immediate UI update
-    onPaymentSuccess(updatedUser);
+      // Process payment response using UserDataService
+      const processedResponse = UserDataService.processPaymentResponse(mockResponse);
+      
+      if (processedResponse) {
+        // Update user data and payment history
+        const paymentHistory = UserDataService.getPaymentHistory(user.id);
+        paymentHistory.push(processedResponse.payment_record);
+        
+        UserDataService.updateAllUserData(
+          user.id,
+          processedResponse.user_data,
+          undefined, // conversations - keep existing
+          paymentHistory,
+          undefined // usage stats - keep existing
+        );
+        
+        // Update localStorage with subscription details
+        localStorage.setItem('lovable_user', JSON.stringify(processedResponse.user_data));
 
-    toast({
-      title: "התשלום אושר!",
-      description: `מנוי ${packageData.name} בעיבוד - תקבל אישור סופי במייל`,
-      duration: 5000
-    });
+        // Call parent success handler for immediate UI update
+        onPaymentSuccess(processedResponse.user_data);
 
-    // Show additional info toast
-    setTimeout(() => {
+        toast({
+          title: "התשלום אושר!",
+          description: processedResponse.message || `מנוי ${packageData.name} בעיבוד - תקבל אישור סופי במייל`,
+          duration: 5000
+        });
+      } else {
+        // Fallback to old behavior
+        const updatedUser = {
+          ...user,
+          plan: packageData.type,
+          messageLimit: packageData.messageLimit,
+          subscriptionStatus: 'active' as const,
+          subscriptionStartDate: new Date(),
+          subscriptionEndDate: null
+        };
+
+        localStorage.setItem('lovable_user', JSON.stringify(updatedUser));
+        onPaymentSuccess(updatedUser);
+
+        toast({
+          title: "התשלום אושר!",
+          description: `מנוי ${packageData.name} בעיבוד - תקבל אישור סופי במייל`,
+          duration: 5000
+        });
+      }
+
+      // Show additional info toast
+      setTimeout(() => {
+        toast({
+          title: "📧 בקרוב במייל",
+          description: "אישור התשלום והפעלת המנוי יישלחו אליך במייל תוך מספר דקות",
+          duration: 8000
+        });
+      }, 2000);
+
+    } catch (error) {
+      console.error('Payment processing error:', error);
       toast({
-        title: "📧 בקרוב במייל",
-        description: "אישור התשלום והפעלת המנוי יישלחו אליך במייל תוך מספר דקות",
-        duration: 8000
+        title: "שגיאה בעיבוד התשלום",
+        description: "אנא פנה לתמיכה",
+        variant: "destructive"
       });
-    }, 2000);
+    }
 
     onClose();
   };

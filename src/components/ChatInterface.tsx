@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { getToken, setToken, clearToken, fetchWithAuth, extractToken } from '@/lib/auth';
+import UserDataService from '@/services/userDataService';
 
 // Chat Session interface
 interface ChatSession {
@@ -284,31 +285,54 @@ const ChatInterface = () => {
             userData = responseText;
           }
           
-          // חלץ טוקן אם קיים
-          const token = extractToken(userData);
-          if (token) {
-            setToken(token);
-            console.log('JWT token saved after login');
-          }
+          // Try to process extended server response
+          const processedResponse = UserDataService.processLoginResponse(userData);
           
-          // אם זה true או array עם success: true - המשתמש התחבר בהצלחה
-          if (userData === true || 
-              (typeof userData === 'object' && userData.success) ||
-              (Array.isArray(userData) && userData.length > 0 && userData[0].success)) {
+          if (processedResponse) {
+            // Handle extended server response
+            const token = processedResponse.token || UserDataService.extractToken(userData);
+            if (token) {
+              setToken(token);
+              console.log('JWT token saved after login');
+            }
+
             const existingUser: User = {
-              id: userData.id || userId,
+              id: processedResponse.user_data.id || userId,
               email,
-              name: userData.name || name,
-              category: userData.category || 'תכנות',
-              plan: userData.plan || 'free',
-              messagesUsed: userData.messagesUsed || 0,
-              messageLimit: userData.messageLimit || 50,
-              registrationDate: userData.registrationDate || new Date().toISOString(),
-              profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || name)}&background=0D8043&color=fff`
+              name: processedResponse.user_data.name || name,
+              category: processedResponse.user_data.category || 'תכנות',
+              plan: processedResponse.user_data.plan || 'free',
+              messagesUsed: processedResponse.user_data.messagesUsed || 0,
+              messageLimit: processedResponse.user_data.messageLimit || 50,
+              registrationDate: processedResponse.user_data.registrationDate || new Date().toISOString(),
+              profileImage: processedResponse.user_data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(processedResponse.user_data.name || name)}&background=0D8043&color=fff`
             };
-            
+
+            // Update all user data including conversations, payment history, and stats
+            UserDataService.updateAllUserData(
+              existingUser.id,
+              processedResponse.user_data,
+              processedResponse.conversations,
+              processedResponse.payment_history,
+              processedResponse.usage_stats
+            );
+
+            // Load conversations from server data
+            if (processedResponse.conversations.length > 0) {
+              // Convert ServerConversation to ChatSession format
+              const convertedConversations: ChatSession[] = processedResponse.conversations.map(conv => ({
+                id: conv.session_id,
+                user_id: existingUser.id,
+                session_id: conv.session_id,
+                title: conv.title,
+                last_message_at: conv.last_message_at,
+                created_at: conv.created_at,
+                updated_at: conv.last_message_at
+              }));
+              setSavedConversations(convertedConversations);
+            }
+
             setUser(existingUser);
-            localStorage.setItem('lovable_user', JSON.stringify(existingUser));
             setShowAuth(false);
             
             toast({
@@ -316,9 +340,42 @@ const ChatInterface = () => {
               description: `התחברתם בהצלחה כמומחה ב${existingUser.category}.`
             });
           } else {
-            // אם זה לא true - הצג את ההודעה שהשרת החזיר
-            const errorMessage = typeof userData === 'string' ? userData : 'שגיאה בהתחברות';
-            throw new Error(errorMessage);
+            // Fallback to old behavior
+            const token = UserDataService.extractToken(userData);
+            if (token) {
+              setToken(token);
+              console.log('JWT token saved after login');
+            }
+            
+            // אם זה true או array עם success: true - המשתמש התחבר בהצלחה
+            if (userData === true || 
+                (typeof userData === 'object' && userData.success) ||
+                (Array.isArray(userData) && userData.length > 0 && userData[0].success)) {
+              const existingUser: User = {
+                id: userData.id || userId,
+                email,
+                name: userData.name || name,
+                category: userData.category || 'תכנות',
+                plan: userData.plan || 'free',
+                messagesUsed: userData.messagesUsed || 0,
+                messageLimit: userData.messageLimit || 50,
+                registrationDate: userData.registrationDate || new Date().toISOString(),
+                profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || name)}&background=0D8043&color=fff`
+              };
+              
+              setUser(existingUser);
+              localStorage.setItem('lovable_user', JSON.stringify(existingUser));
+              setShowAuth(false);
+              
+              toast({
+                title: "ברוכים הבאים!",
+                description: `התחברתם בהצלחה כמומחה ב${existingUser.category}.`
+              });
+            } else {
+              // אם זה לא true - הצג את ההודעה שהשרת החזיר
+              const errorMessage = typeof userData === 'string' ? userData : 'שגיאה בהתחברות';
+              throw new Error(errorMessage);
+            }
           }
         } else {
           throw new Error('שגיאה בהתחברות. אנא נסו שוב.');
@@ -550,56 +607,110 @@ const ChatInterface = () => {
           data = { message: responseText };
         }
         
-        // Check for updated token in response
-        const newToken = extractToken(data);
-        if (newToken) {
-          setToken(newToken);
-          console.log('JWT token updated from bot response');
-        }
+        // Try to process extended server response
+        const processedResponse = UserDataService.processChatResponse(data);
         
-        // Handle server response - if it's true, process the message, otherwise just show the message
         let cleanContent = '';
         let shouldProcessMessage = false;
         
-        if (data === true) {
-          // השרת החזיר true - השליחה הצליחה, מעביר לממשק הבוט
-          shouldProcessMessage = true;
-          cleanContent = 'ההודעה נשלחה בהצלחה לשרת.';
-          navigate('/'); // העברה לממשק הבוט הראשי
-        } else if (Array.isArray(data)) {
-          console.log('Response is an array:', data);
-          if (data.length === 0) {
-            cleanContent = 'השרת החזיר תגובה ריקה.';
-          } else {
-            const firstItem = data[0];
-            if (typeof firstItem === 'string') {
-              cleanContent = firstItem;
-              shouldProcessMessage = true;
-            } else if (firstItem && typeof firstItem === 'object') {
-              if (firstItem.shouldProcess === true || firstItem.success === true) {
-                shouldProcessMessage = true;
-                cleanContent = firstItem.message || firstItem.response || firstItem.content || firstItem.text || 'קיבלתי תגובה מהשרת';
-              } else {
-                // רק הצג את ההודעה בלי לעבד
-                cleanContent = firstItem.message || firstItem.response || firstItem.content || firstItem.text || JSON.stringify(firstItem);
-              }
-            } else {
-              cleanContent = JSON.stringify(data);
-            }
+        if (processedResponse) {
+          // Handle extended server response
+          const newToken = processedResponse.token || UserDataService.extractToken(data);
+          if (newToken) {
+            setToken(newToken);
+            console.log('JWT token updated from bot response');
           }
-        } else if (typeof data === 'string') {
-          cleanContent = data || 'תגובה ריקה מהשרת';
-          shouldProcessMessage = true;
-        } else if (data && typeof data === 'object') {
-          if (data.shouldProcess === true || data.success === true) {
-            shouldProcessMessage = true;
-            cleanContent = data.message || data.response || data.content || data.text || 'קיבלתי תגובה מהשרת';
-          } else {
-            // רק הצג את ההודעה בלי לעבד
-            cleanContent = data.message || data.response || data.content || data.text || JSON.stringify(data);
+
+          cleanContent = processedResponse.message;
+          shouldProcessMessage = processedResponse.shouldProcess;
+
+          // Update user data if provided
+          if (processedResponse.user_data && user) {
+            const updatedUser = { ...user, ...processedResponse.user_data };
+            setUser(updatedUser);
+            localStorage.setItem('lovable_user', JSON.stringify(updatedUser));
+          }
+
+          // Update conversations if provided
+          if (processedResponse.conversations && user) {
+            UserDataService.syncConversationsFromServer(user.id, processedResponse.conversations);
+            // Convert ServerConversation to ChatSession format
+            const convertedConversations: ChatSession[] = processedResponse.conversations.map(conv => ({
+              id: conv.session_id,
+              user_id: user.id,
+              session_id: conv.session_id,
+              title: conv.title,
+              last_message_at: conv.last_message_at,
+              created_at: conv.created_at,
+              updated_at: conv.last_message_at
+            }));
+            setSavedConversations(convertedConversations);
+          }
+
+          // Update usage stats if provided
+          if (processedResponse.updated_stats && user) {
+            const currentStats = UserDataService.getUsageStats(user.id) || {
+              daily_messages: 0,
+              weekly_messages: 0,
+              monthly_messages: 0,
+              total_conversations: 0,
+              last_active: new Date().toISOString()
+            };
+            const updatedStats = { ...currentStats, ...processedResponse.updated_stats };
+            localStorage.setItem(`lovable_usage_stats_${user.id}`, JSON.stringify(updatedStats));
+          }
+
+          if (processedResponse.success && cleanContent.includes('ההודעה נשלחה בהצלחה')) {
+            navigate('/'); // העברה לממשק הבוט הראשי
           }
         } else {
-          cleanContent = responseText || 'קיבלתי תשובה לא צפויה מהשרת';
+          // Fallback to old behavior
+          const newToken = UserDataService.extractToken(data);
+          if (newToken) {
+            setToken(newToken);
+            console.log('JWT token updated from bot response');
+          }
+          
+          if (data === true) {
+            // השרת החזיר true - השליחה הצליחה, מעביר לממשק הבוט
+            shouldProcessMessage = true;
+            cleanContent = 'ההודעה נשלחה בהצלחה לשרת.';
+            navigate('/'); // העברה לממשק הבוט הראשי
+          } else if (Array.isArray(data)) {
+            console.log('Response is an array:', data);
+            if (data.length === 0) {
+              cleanContent = 'השרת החזיר תגובה ריקה.';
+            } else {
+              const firstItem = data[0];
+              if (typeof firstItem === 'string') {
+                cleanContent = firstItem;
+                shouldProcessMessage = true;
+              } else if (firstItem && typeof firstItem === 'object') {
+                if (firstItem.shouldProcess === true || firstItem.success === true) {
+                  shouldProcessMessage = true;
+                  cleanContent = firstItem.message || firstItem.response || firstItem.content || firstItem.text || 'קיבלתי תגובה מהשרת';
+                } else {
+                  // רק הצג את ההודעה בלי לעבד
+                  cleanContent = firstItem.message || firstItem.response || firstItem.content || firstItem.text || JSON.stringify(firstItem);
+                }
+              } else {
+                cleanContent = JSON.stringify(data);
+              }
+            }
+          } else if (typeof data === 'string') {
+            cleanContent = data || 'תגובה ריקה מהשרת';
+            shouldProcessMessage = true;
+          } else if (data && typeof data === 'object') {
+            if (data.shouldProcess === true || data.success === true) {
+              shouldProcessMessage = true;
+              cleanContent = data.message || data.response || data.content || data.text || 'קיבלתי תגובה מהשרת';
+            } else {
+              // רק הצג את ההודעה בלי לעבד
+              cleanContent = data.message || data.response || data.content || data.text || JSON.stringify(data);
+            }
+          } else {
+            cleanContent = responseText || 'קיבלתי תשובה לא צפויה מהשרת';
+          }
         }
 
         console.log('Final message content:', cleanContent);

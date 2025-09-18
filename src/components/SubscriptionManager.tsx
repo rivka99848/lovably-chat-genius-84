@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import UserDataService, { PaymentRecord, UsageStats } from '@/services/userDataService';
 import { 
   Crown, 
   Calendar, 
@@ -136,8 +137,11 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
     return () => clearInterval(interval);
   }, [user, onUpdateUser]);
 
-  // Empty payments array - will be implemented with real data later
-  const payments: Payment[] = [];
+  // Get payment history from server data
+  const payments: PaymentRecord[] = user ? UserDataService.getPaymentHistory(user.id) : [];
+  
+  // Get usage statistics from server data
+  const usageStats: UsageStats | null = user ? UserDataService.getUsageStats(user.id) : null;
 
   const generateEventId = () => {
     return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
