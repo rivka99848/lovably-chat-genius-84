@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, User, Settings, Crown, Upload, Moon, Sun, LogOut, CreditCard, Menu, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BotStatusIndicator from './BotStatusIndicator';
+import RunningBotBadge from './RunningBotBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -126,10 +127,16 @@ const ChatInterface = () => {
       setShowAuth(true);
     }
     
-    // Load theme preference
+    // Load theme preference and apply immediately
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
+      const isDark = savedTheme === 'dark';
+      setIsDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, []);
 
@@ -139,6 +146,12 @@ const ChatInterface = () => {
 
   useEffect(() => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    // Apply theme to body element for global theming
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [isDarkMode]);
 
   // Auto-resize textarea based on content
@@ -810,12 +823,13 @@ const ChatInterface = () => {
   }
 
   return (
-    <div className={`chat-container flex h-screen premium-gradient ${isDarkMode ? 'dark text-white' : 'text-gray-900'}`} dir="rtl">
+    <div className={`flex h-screen premium-gradient ${isDarkMode ? 'dark text-white' : 'text-gray-900'}`} dir="rtl">
+      <RunningBotBadge isDarkMode={isDarkMode} />
       <div className="chat-background-decoration" />
       
       {/* Sidebar */}
       {isSidebarOpen && (
-        <div className={`w-80 border-l backdrop-blur-xl flex flex-col transition-all duration-300 bg-gray-900 ${
+        <div className={`w-80 lg:w-96 border-l backdrop-blur-xl flex flex-col transition-all duration-300 bg-gray-900 ${
           isDarkMode 
             ? 'border-gray-700/50' 
             : 'border-gray-200'
@@ -1021,7 +1035,7 @@ const ChatInterface = () => {
       )}
 
       {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col ${isDarkMode ? '' : 'bg-white/95'}`}>
+      <div className={`flex-1 flex flex-col chat-container ${isDarkMode ? '' : 'bg-white/95'}`}>
         {/* Toggle Sidebar Button */}
         <div className={`p-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
           <button

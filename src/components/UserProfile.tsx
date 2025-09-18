@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import PlanUpgrade from '@/components/PlanUpgrade';
@@ -279,26 +278,16 @@ const UserProfile: React.FC<Props> = ({ user, onClose, onUpdateUser, isDarkMode,
                 <Label htmlFor="category" className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
                   קטגוריה מקצועית
                 </Label>
-                <Select 
-                  value={editedCategory} 
-                  onValueChange={setEditedCategory}
-                  disabled={!isEditing}
-                >
-                  <SelectTrigger className={`${
+                <Input
+                  id="category"
+                  value={editedCategory}
+                  disabled
+                  className={`${
                     isDarkMode 
-                      ? 'bg-gray-800 border-gray-700 text-white disabled:text-gray-300' 
-                      : 'bg-gray-50 border-gray-200 text-gray-900 disabled:text-gray-600'
-                  }`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      ? 'bg-gray-800 border-gray-700 text-gray-300' 
+                      : 'bg-gray-100 border-gray-200 text-gray-600'
+                  }`}
+                />
               </div>
 
               <div className="space-y-2">
