@@ -39,14 +39,14 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 15% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 140 100% 20%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 140 100% 15%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 15% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 15% 15%;
-    --sidebar-ring: 140 100% 30%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 140 100% 25%;
 
     /* Custom premium colors */
     --premium-dark-green: 140 100% 12%;
@@ -200,6 +200,14 @@ All colors MUST be HSL.
     z-index: -1;
   }
 
+  /* Mobile sidebar backdrop */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+
   /* Responsive design utilities */
   @media (max-width: 768px) {
     .chat-container {
@@ -212,14 +220,6 @@ All colors MUST be HSL.
       left: -70px;
       padding: 6px 75px;
       font-size: 10px;
-    }
-    
-    /* Mobile sidebar backdrop */
-    .sidebar-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 40;
     }
   }
 

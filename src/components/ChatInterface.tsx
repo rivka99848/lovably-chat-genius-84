@@ -829,6 +829,14 @@ const ChatInterface = () => {
       <RunningBotBadge isDarkMode={isDarkMode} />
       <div className="chat-background-decoration" />
       
+      {/* Mobile backdrop */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       {isSidebarOpen && (
         <div className={`w-80 lg:w-96 border-l backdrop-blur-xl flex flex-col transition-all duration-300 ${
