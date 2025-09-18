@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, User, Settings, Crown, Upload, Moon, Sun, LogOut, CreditCard, Menu, X, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import BotStatusIndicator from './BotStatusIndicator';
 import RunningBotBadge from './RunningBotBadge';
 import { Button } from '@/components/ui/button';
@@ -64,7 +65,8 @@ const ChatInterface = () => {
   const [showPlanUpgrade, setShowPlanUpgrade] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
   const [savedConversations, setSavedConversations] = useState<ChatSession[]>([]);
   const [viewingConversation, setViewingConversation] = useState<ChatSession | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
@@ -829,23 +831,41 @@ const ChatInterface = () => {
       
       {/* Sidebar */}
       {isSidebarOpen && (
-        <div className={`w-80 lg:w-96 border-l backdrop-blur-xl flex flex-col transition-all duration-300 bg-gray-900 ${
+        <div className={`w-80 lg:w-96 border-l backdrop-blur-xl flex flex-col transition-all duration-300 ${
+          isMobile 
+            ? 'fixed inset-y-0 right-0 z-50 bg-sidebar-background' 
+            : 'bg-sidebar-background'
+        } ${
           isDarkMode 
-            ? 'border-gray-700/50' 
-            : 'border-gray-200'
+            ? 'border-sidebar-border' 
+            : 'border-border'
         }`}>
           {/* Header */}
-          <div className={`p-6 border-b bg-gray-900 ${isDarkMode ? 'border-gray-700/50' : 'border-gray-200'}`}>
+          <div className={`p-6 border-b bg-sidebar-background ${isDarkMode ? 'border-sidebar-border' : 'border-border'}`}>
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
                 בוט מסונן
               </h1>
               <div className="flex space-x-2 space-x-reverse">
+                {/* Close button - only show on mobile */}
+                {isMobile && (
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isDarkMode 
+                        ? 'hover:bg-sidebar-accent text-sidebar-foreground' 
+                        : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                    title="סגור תפריט"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className={`p-2 rounded-lg transition-colors ${
                     isDarkMode 
-                      ? 'hover:bg-white/10 text-white/80' 
+                      ? 'hover:bg-sidebar-accent text-sidebar-foreground' 
                       : 'hover:bg-gray-100 text-gray-600'
                   }`}
                   title="החלף צבע"
@@ -856,7 +876,7 @@ const ChatInterface = () => {
                   onClick={() => setShowPlanUpgrade(true)}
                   className={`p-2 rounded-lg transition-colors ${
                     isDarkMode 
-                      ? 'hover:bg-white/10 text-yellow-400' 
+                      ? 'hover:bg-sidebar-accent text-yellow-400' 
                       : 'hover:bg-gray-100 text-yellow-600'
                   }`}
                   title="שדרוג"
@@ -869,7 +889,7 @@ const ChatInterface = () => {
                     <button
                       className={`p-2 rounded-lg transition-colors ${
                         isDarkMode 
-                          ? 'hover:bg-white/10 text-blue-400' 
+                          ? 'hover:bg-sidebar-accent text-blue-400' 
                           : 'hover:bg-gray-100 text-blue-600'
                       }`}
                       title="הגדרות"
@@ -877,7 +897,7 @@ const ChatInterface = () => {
                       <Settings className="w-5 h-5" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border shadow-lg">
+                  <DropdownMenuContent align="end" className="w-56 bg-card border shadow-lg">
                     <DropdownMenuItem onClick={handleLogout} dir="rtl" className="text-orange-600 hover:text-orange-700 hover:bg-orange-50">
                       <LogOut className="ml-2 h-4 w-4" />
                       התנתקות
@@ -908,7 +928,7 @@ const ChatInterface = () => {
             {user && (
               <div className="space-y-2">
                 <div className={`flex items-center space-x-2 space-x-reverse text-sm ${
-                  isDarkMode ? 'text-white/70' : 'text-gray-600'
+                  isDarkMode ? 'text-sidebar-foreground/70' : 'text-muted-foreground'
                 }`}>
                   <User className="w-4 h-4" />
                   <span>{user.name}</span>
@@ -916,7 +936,7 @@ const ChatInterface = () => {
                 <Badge className="bg-green-600/20 text-green-400 border-green-600/30">
                   {user.category}
                 </Badge>
-                <div className={`text-xs ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                <div className={`text-xs ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
                   {user.messagesUsed.toLocaleString()}/{user.messageLimit.toLocaleString()} טוקנים נשלחו
                 </div>
               </div>
@@ -936,7 +956,7 @@ const ChatInterface = () => {
 
           {/* Chat History Summary */}
           <div className="flex-1 p-4 overflow-y-auto">
-            <h3 className={`text-sm font-semibold mb-3 ${isDarkMode ? 'text-white/70' : 'text-gray-700'}`}>שיחות אחרונות</h3>
+            <h3 className={`text-sm font-semibold mb-3 ${isDarkMode ? 'text-sidebar-foreground/70' : 'text-muted-foreground'}`}>שיחות אחרונות</h3>
             <div className="space-y-2">
               {/* Current conversation */}
               {messages.length > 0 && !viewingConversation && (
@@ -945,11 +965,11 @@ const ChatInterface = () => {
                     ? 'bg-green-600/20 border-green-600/30 hover:bg-green-600/30' 
                     : 'bg-green-50 border-green-200 hover:bg-green-100'
                 }`}>
-                  <div className={`text-sm truncate ${isDarkMode ? 'text-white/70' : 'text-gray-700'}`}>
+                  <div className={`text-sm truncate ${isDarkMode ? 'text-sidebar-foreground/70' : 'text-foreground'}`}>
                     <span className="text-green-400 text-xs">שיחה נוכחית • </span>
                     {generateChatTitle(messages[0]?.content || 'שיחה חדשה')}
                   </div>
-                  <div className={`text-xs mt-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                  <div className={`text-xs mt-1 ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
                     {messages.length} הודעות
                   </div>
                 </Card>
@@ -968,7 +988,7 @@ const ChatInterface = () => {
                   <div className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                     ↩ חזרה לשיחה נוכחית
                   </div>
-                  <div className={`text-xs mt-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                   <div className={`text-xs mt-1 ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
                     לחצו לחזרה לשיחה הפעילה
                   </div>
                 </Card>
@@ -981,11 +1001,11 @@ const ChatInterface = () => {
                     ? 'bg-purple-600/20 border-purple-600/30' 
                     : 'bg-purple-50 border-purple-200'
                 }`}>
-                  <div className={`text-sm truncate ${isDarkMode ? 'text-white/70' : 'text-gray-700'}`}>
+                  <div className={`text-sm truncate ${isDarkMode ? 'text-sidebar-foreground/70' : 'text-foreground'}`}>
                     <span className="text-purple-400 text-xs">צופים כעת • </span>
                     {viewingConversation.title}
                   </div>
-                  <div className={`text-xs mt-1 ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                  <div className={`text-xs mt-1 ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
                     שיחה פתוחה
                   </div>
                 </Card>
@@ -1006,10 +1026,10 @@ const ChatInterface = () => {
                           : 'bg-gray-50 border-gray-200 hover:bg-gray-100')
                   }`}
                 >
-                  <div className={`text-sm truncate ${isDarkMode ? 'text-white/70' : 'text-gray-700'}`}>
+                  <div className={`text-sm truncate ${isDarkMode ? 'text-sidebar-foreground/70' : 'text-foreground'}`}>
                     {conversation.title}
                   </div>
-                  <div className={`text-xs mt-1 flex justify-between ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+                  <div className={`text-xs mt-1 flex justify-between ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
                     <span>שיחה משומרת</span>
                     <span>{new Date(conversation.last_message_at).toLocaleDateString('he-IL')}</span>
                   </div>
@@ -1018,7 +1038,7 @@ const ChatInterface = () => {
               
               {/* Empty state */}
               {messages.length === 0 && savedConversations.length === 0 && (
-                <div className={`text-sm text-center py-8 ${isDarkMode ? 'text-white/40' : 'text-gray-400'}`}>
+                <div className={`text-sm text-center py-8 ${isDarkMode ? 'text-sidebar-foreground/40' : 'text-muted-foreground'}`}>
                   עדיין אין שיחות
                 </div>
               )}
@@ -1026,8 +1046,8 @@ const ChatInterface = () => {
           </div>
 
           {/* Settings */}
-          <div className={`p-4 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
-            <div className={`text-sm text-center ${isDarkMode ? 'text-white/50' : 'text-gray-500'}`}>
+          <div className={`p-4 border-t ${isDarkMode ? 'border-sidebar-border' : 'border-border'}`}>
+            <div className={`text-sm text-center ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
               הקטגוריה שלכם: <span className="font-semibold text-green-400">{user?.category}</span>
             </div>
           </div>
@@ -1035,15 +1055,15 @@ const ChatInterface = () => {
       )}
 
       {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col chat-container ${isDarkMode ? '' : 'bg-white/95'}`}>
+      <div className={`flex-1 flex flex-col chat-container ${isDarkMode ? '' : 'bg-white/95'}`} onClick={isMobile && isSidebarOpen ? () => setIsSidebarOpen(false) : undefined}>
         {/* Toggle Sidebar Button */}
-        <div className={`p-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+        <div className={`p-4 border-b ${isDarkMode ? 'border-border' : 'border-border'}`}>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode 
-                ? 'hover:bg-white/10 text-white/80 hover:text-white' 
-                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                ? 'hover:bg-card text-foreground/80 hover:text-foreground' 
+                : 'hover:bg-card text-foreground/80 hover:text-foreground'
             }`}
             title={isSidebarOpen ? "הסתר תפריט" : "הצג תפריט"}
           >
@@ -1088,10 +1108,10 @@ const ChatInterface = () => {
         </div>
 
         {/* Input Area */}
-        <div className={`border-t backdrop-blur-xl p-6 bg-gray-900 ${
+        <div className={`border-t backdrop-blur-xl p-6 ${
           isDarkMode 
-            ? 'border-white/10' 
-            : 'border-gray-200'
+            ? 'bg-card border-border' 
+            : 'bg-card border-border'
         }`}>
           {uploadedFiles.length > 0 && (
             <div className={`mb-4 p-3 rounded-lg border ${

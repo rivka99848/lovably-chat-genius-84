@@ -213,6 +213,14 @@ All colors MUST be HSL.
       padding: 6px 75px;
       font-size: 10px;
     }
+    
+    /* Mobile sidebar backdrop */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+    }
   }
 
   @media (min-width: 769px) and (max-width: 1024px) {
