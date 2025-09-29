@@ -9,7 +9,7 @@ interface Package {
   id: string;
   name: string;
   price: number;
-  messageLimit: number;
+  tokenLimit: number;
   features: string[];
   type: 'free' | 'pro' | 'enterprise';
 }
@@ -21,8 +21,9 @@ interface User {
   phone?: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messagesUsed: number;
-  messageLimit: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;
   subscriptionEndDate?: Date;
@@ -191,7 +192,7 @@ const PaymentIframe: React.FC<PaymentIframeProps> = ({
         user_data: {
           ...user,
           plan: packageData.type,
-          messageLimit: packageData.messageLimit,
+          tokenLimit: packageData.tokenLimit,
           subscriptionStatus: 'active' as const,
           subscriptionStartDate: new Date(),
           subscriptionEndDate: null
@@ -220,8 +221,7 @@ const PaymentIframe: React.FC<PaymentIframeProps> = ({
           user.id,
           processedResponse.user_data,
           undefined, // conversations - keep existing
-          paymentHistory,
-          undefined // usage stats - keep existing
+          paymentHistory
         );
         
         // Update localStorage with subscription details
@@ -240,7 +240,7 @@ const PaymentIframe: React.FC<PaymentIframeProps> = ({
         const updatedUser = {
           ...user,
           plan: packageData.type,
-          messageLimit: packageData.messageLimit,
+          tokenLimit: packageData.tokenLimit,
           subscriptionStatus: 'active' as const,
           subscriptionStartDate: new Date(),
           subscriptionEndDate: null

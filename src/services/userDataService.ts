@@ -5,8 +5,9 @@ export interface ExtendedUser {
   phone?: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messagesUsed: number;
-  messageLimit: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   registrationDate?: string;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;
@@ -32,20 +33,12 @@ export interface PaymentRecord {
   description?: string;
 }
 
-export interface UsageStats {
-  daily_messages: number;
-  weekly_messages: number;
-  monthly_messages: number;
-  total_conversations: number;
-  last_active: string;
-}
 
 export interface LoginResponse {
   success: boolean;
   user_data: ExtendedUser;
   conversations: ServerConversation[];
   payment_history: PaymentRecord[];
-  usage_stats: UsageStats;
   token?: string;
   message?: string;
 }
@@ -56,7 +49,7 @@ export interface ChatResponse {
   shouldProcess: boolean;
   user_data?: Partial<ExtendedUser>;
   conversations?: ServerConversation[];
-  updated_stats?: Partial<UsageStats>;
+  payment_history?: PaymentRecord[];
   token?: string;
 }
 
@@ -96,13 +89,6 @@ class UserDataService {
           user_data: responseData.user_data || responseData,
           conversations: responseData.conversations || [],
           payment_history: responseData.payment_history || [],
-          usage_stats: responseData.usage_stats || {
-            daily_messages: 0,
-            weekly_messages: 0,
-            monthly_messages: 0,
-            total_conversations: 0,
-            last_active: new Date().toISOString()
-          },
           token: responseData.token,
           message: responseData.message
         };
@@ -135,7 +121,7 @@ class UserDataService {
             shouldProcess: firstItem.shouldProcess || firstItem.success,
             user_data: firstItem.user_data,
             conversations: firstItem.conversations,
-            updated_stats: firstItem.updated_stats,
+            payment_history: firstItem.payment_history,
             token: firstItem.token
           };
         }
@@ -148,7 +134,7 @@ class UserDataService {
           shouldProcess: responseData.shouldProcess || responseData.success,
           user_data: responseData.user_data,
           conversations: responseData.conversations,
-          updated_stats: responseData.updated_stats,
+          payment_history: responseData.payment_history,
           token: responseData.token
         };
       }
@@ -201,7 +187,7 @@ class UserDataService {
     }
   }
 
-  updateAllUserData(userId: string, userData: ExtendedUser, conversations?: ServerConversation[], paymentHistory?: PaymentRecord[], usageStats?: UsageStats): void {
+  updateAllUserData(userId: string, userData: ExtendedUser, conversations?: ServerConversation[], paymentHistory?: PaymentRecord[]): void {
     try {
       // Update user data
       localStorage.setItem('lovable_user', JSON.stringify(userData));
@@ -216,10 +202,6 @@ class UserDataService {
         localStorage.setItem(`lovable_payment_history_${userId}`, JSON.stringify(paymentHistory));
       }
 
-      // Update usage stats if provided
-      if (usageStats) {
-        localStorage.setItem(`lovable_usage_stats_${userId}`, JSON.stringify(usageStats));
-      }
 
       console.log('User data updated successfully');
     } catch (error) {
@@ -246,15 +228,6 @@ class UserDataService {
     }
   }
 
-  getUsageStats(userId: string): UsageStats | null {
-    try {
-      const stored = localStorage.getItem(`lovable_usage_stats_${userId}`);
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.error('Error getting usage stats:', error);
-      return null;
-    }
-  }
 
   extractToken(data: any): string | null {
     if (typeof data === 'object' && data !== null) {

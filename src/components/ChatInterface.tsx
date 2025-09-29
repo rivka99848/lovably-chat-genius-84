@@ -48,8 +48,9 @@ interface User {
   name: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messagesUsed: number;
-  messageLimit: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;
   subscriptionEndDate?: Date;
@@ -239,8 +240,9 @@ const ChatInterface = () => {
               name,
               category,
               plan: userData.plan || 'free',
-              messagesUsed: userData.messagesUsed || 0,
-              messageLimit: userData.messageLimit || 50,
+              tokens: userData.tokens || '',
+              tokensUsed: userData.tokensUsed || 0,
+              tokenLimit: userData.tokenLimit || 50,
               registrationDate: new Date().toISOString(),
               profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8043&color=fff`
             };
@@ -302,9 +304,9 @@ const ChatInterface = () => {
               name: processedResponse.user_data.name || name,
               category: processedResponse.user_data.category || 'תכנות',
               plan: processedResponse.user_data.plan || 'free',
-              messagesUsed: processedResponse.user_data.messagesUsed || 0,
-              messageLimit: processedResponse.user_data.messageLimit || 50,
-              registrationDate: processedResponse.user_data.registrationDate || new Date().toISOString(),
+              tokensUsed: processedResponse.user_data.tokensUsed || 0,
+              tokenLimit: processedResponse.user_data.tokenLimit || 50,
+              tokens: processedResponse.user_data.tokens || '',
               profileImage: processedResponse.user_data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(processedResponse.user_data.name || name)}&background=0D8043&color=fff`
             };
 
@@ -313,8 +315,7 @@ const ChatInterface = () => {
               existingUser.id,
               processedResponse.user_data,
               processedResponse.conversations,
-              processedResponse.payment_history,
-              processedResponse.usage_stats
+              processedResponse.payment_history
             );
 
             // Load conversations from server data
@@ -357,8 +358,9 @@ const ChatInterface = () => {
                 name: userData.name || name,
                 category: userData.category || 'תכנות',
                 plan: userData.plan || 'free',
-                messagesUsed: userData.messagesUsed || 0,
-                messageLimit: userData.messageLimit || 50,
+                tokens: userData.tokens || '',
+                tokensUsed: userData.tokensUsed || 0,
+                tokenLimit: userData.tokenLimit || 50,
                 registrationDate: userData.registrationDate || new Date().toISOString(),
                 profileImage: userData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || name)}&background=0D8043&color=fff`
               };
@@ -508,7 +510,7 @@ const ChatInterface = () => {
     }
 
     // Check token limits  
-    if (user.messagesUsed >= user.messageLimit) {
+    if (user.tokensUsed >= user.tokenLimit) {
       toast({
         title: "נגמרו הטוקנים",
         description: "נגמרו לכם הטוקנים לחודש זה. שדרגו את התוכנית או המתינו לחידוש החודשי.",
@@ -547,8 +549,8 @@ const ChatInterface = () => {
     formData.append('userName', user.name);
     formData.append('userCategory', user.category);
     formData.append('userPlan', user.plan);
-    formData.append('userMessagesUsed', user.messagesUsed.toString());
-    formData.append('userMessageLimit', user.messageLimit.toString());
+    formData.append('userTokensUsed', user.tokensUsed.toString());
+    formData.append('userTokenLimit', user.tokenLimit.toString());
     formData.append('message', inputValue);
     formData.append('messagePosition', (messages.length + 1).toString());
     formData.append('sessionTitle', sessionTitle);
@@ -647,18 +649,6 @@ const ChatInterface = () => {
             setSavedConversations(convertedConversations);
           }
 
-          // Update usage stats if provided
-          if (processedResponse.updated_stats && user) {
-            const currentStats = UserDataService.getUsageStats(user.id) || {
-              daily_messages: 0,
-              weekly_messages: 0,
-              monthly_messages: 0,
-              total_conversations: 0,
-              last_active: new Date().toISOString()
-            };
-            const updatedStats = { ...currentStats, ...processedResponse.updated_stats };
-            localStorage.setItem(`lovable_usage_stats_${user.id}`, JSON.stringify(updatedStats));
-          }
 
           if (processedResponse.success && cleanContent.includes('ההודעה נשלחה בהצלחה')) {
             navigate('/'); // העברה לממשק הבוט הראשי
@@ -755,7 +745,7 @@ const ChatInterface = () => {
 
         // Update message count only if we should process the message
         if (shouldProcessMessage) {
-          const updatedUser = { ...user, messagesUsed: user.messagesUsed + 1 };
+          const updatedUser = { ...user, tokensUsed: user.tokensUsed + 1 };
           setUser(updatedUser);
           localStorage.setItem('lovable_user', JSON.stringify(updatedUser));
         }
@@ -1056,7 +1046,7 @@ const ChatInterface = () => {
                   {user.category}
                 </Badge>
                 <div className={`text-xs ${isDarkMode ? 'text-sidebar-foreground/50' : 'text-muted-foreground'}`}>
-                  {user.messagesUsed.toLocaleString()}/{user.messageLimit.toLocaleString()} טוקנים נשלחו
+                  {user.tokensUsed.toLocaleString()}/{user.tokenLimit.toLocaleString()} טוקנים נשלחו
                 </div>
               </div>
             )}
@@ -1274,8 +1264,8 @@ const ChatInterface = () => {
                 isDarkMode 
                   ? 'hover:bg-white/5 text-white/80 hover:text-white' 
                   : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-              } ${user && user.messagesUsed >= user.messageLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isLoading || (user && user.messagesUsed >= user.messageLimit)}
+              } ${user && user.tokensUsed >= user.tokenLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLoading || (user && user.tokensUsed >= user.tokenLimit)}
               title="העלאת קבצים"
             >
               <Upload className="w-5 h-5" />
@@ -1292,21 +1282,21 @@ const ChatInterface = () => {
                     sendMessage();
                   }
                 }}
-                placeholder={user && user.messagesUsed >= user.messageLimit ? 
+                placeholder={user && user.tokensUsed >= user.tokenLimit ? 
                   "נגמרו הטוקנים - שדרגו את התוכנית כדי להמשיך" :
                   `שאלו את המומחה שלכם ב${user?.category} כל שאלה או העלו קבצים...`}
                 className={`w-full min-h-[48px] max-h-32 pl-12 py-3 text-base text-right backdrop-blur-sm resize-none ${
                   isDarkMode 
                     ? 'bg-white/10 border-white/20 focus:border-green-400 focus:ring-green-400 text-white placeholder-white/50' 
                     : 'bg-white/80 border-gray-200 focus:border-green-500 focus:ring-green-500 text-gray-900 placeholder-gray-500'
-                } rounded-lg border ${user && user.messagesUsed >= user.messageLimit ? 'opacity-50' : ''}`}
-                disabled={isLoading || (user && user.messagesUsed >= user.messageLimit)}
+                } rounded-lg border ${user && user.tokensUsed >= user.tokenLimit ? 'opacity-50' : ''}`}
+                disabled={isLoading || (user && user.tokensUsed >= user.tokenLimit)}
                 rows={1}
               />
             </div>
             <button
               onClick={sendMessage}
-              disabled={(!inputValue.trim() && uploadedFiles.length === 0) || isLoading || (user && user.messagesUsed >= user.messageLimit)}
+              disabled={(!inputValue.trim() && uploadedFiles.length === 0) || isLoading || (user && user.tokensUsed >= user.tokenLimit)}
               className={`p-3 rounded-lg transition-all duration-200 disabled:opacity-50 ${
                 isDarkMode 
                   ? 'hover:bg-white/5 text-white/80 hover:text-white' 
@@ -1318,10 +1308,10 @@ const ChatInterface = () => {
             </button>
           </div>
           
-          {user && user.messagesUsed >= user.messageLimit && (
+          {user && user.tokensUsed >= user.tokenLimit && (
             <div className="mt-3 p-3 rounded-lg border bg-white border-gray-300 text-black">
               <p className="text-sm font-medium">
-                נגמרו לכם הטוקנים ({user.messagesUsed.toLocaleString()}/{user.messageLimit.toLocaleString()} נשלחו).
+                נגמרו לכם הטוקנים ({user.tokensUsed.toLocaleString()}/{user.tokenLimit.toLocaleString()} נשלחו).
                 {user.registrationDate && (
                   <span className="block mt-1">
                     נרשמתם ב-{new Date(user.registrationDate).toLocaleDateString('he-IL')} - טוקנים מתחדשים בתחילת החודש הבא.
@@ -1338,10 +1328,10 @@ const ChatInterface = () => {
             </div>
           )}
           
-          {user && user.messagesUsed >= user.messageLimit * 0.8 && user.messagesUsed < user.messageLimit && (
+          {user && user.tokensUsed >= user.tokenLimit * 0.8 && user.tokensUsed < user.tokenLimit && (
             <div className="mt-3 p-3 rounded-lg border bg-white border-gray-300 text-black">
               <p className="text-sm">
-                נגמרים לכם הטוקנים ({user.messagesUsed.toLocaleString()}/{user.messageLimit.toLocaleString()} נשלחו). 
+                נגמרים לכם הטוקנים ({user.tokensUsed.toLocaleString()}/{user.tokenLimit.toLocaleString()} נשלחו).
                 <Button
                   variant="link"
                   className="p-0 mr-1 underline text-black"

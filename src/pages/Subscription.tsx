@@ -9,8 +9,9 @@ interface User {
   name: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messageLimit: number;
-  messagesUsed: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   registrationDate?: string;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;

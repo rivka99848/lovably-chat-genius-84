@@ -11,7 +11,7 @@ interface Package {
   id: string;
   name: string;
   price: number;
-  messageLimit: number;
+  tokenLimit: number;
   features: string[];
   type: 'free' | 'pro' | 'enterprise';
   popular?: boolean;
@@ -61,7 +61,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
       id: '1',
       name: 'חבילה חינם',
       price: 0,
-      messageLimit: 50,
+      tokenLimit: 50,
       features: ['50 טוקנים חינם', 'תמיכה בסיסית', 'גישה לכל התכונות הבסיסיות'],
       type: 'free'
     },
@@ -69,7 +69,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
       id: '2',
       name: 'חבילה בסיסית',
       price: 15,
-      messageLimit: 300000,
+      tokenLimit: 300000,
       features: ['300,000 טוקנים', 'תמיכה מועדפת', 'גישה מוקדמת לתכונות', 'ייצוא שיחות', 'אולוית עדיפות'],
       type: 'pro',
       popular: true
@@ -78,7 +78,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
       id: '3',
       name: 'חבילה מתקדמת',
       price: 25,
-      messageLimit: 600000,
+      tokenLimit: 600000,
       features: ['600,000 טוקנים', 'תמיכה', 'נהל מרובה', 'ניתוח תמונות'],
       type: 'enterprise'
     }
@@ -115,8 +115,8 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
       plan_change: {
         previous_plan: user.plan,
         new_plan: packageData.type,
-        previous_limit: user.messageLimit,
-        new_limit: packageData.messageLimit,
+        previous_limit: user.tokens,
+        new_limit: packageData.tokenLimit,
         change_type: isCancellation ? "cancellation" : "downgrade",
         immediate: !isCancellation,
         reason: "user_initiated"
@@ -157,7 +157,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
         updatedUser = {
           ...user,
           plan: packageData.type,
-          messageLimit: packageData.messageLimit,
+          tokenLimit: packageData.tokenLimit,
           subscriptionStatus: packageData.type === 'free' ? 'free' : 'active'
         };
         
@@ -228,7 +228,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
                 <div>
                   <div className="font-medium">החבילה הנוכחית שלך</div>
                   <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {user.messagesUsed.toLocaleString()}/{user.messageLimit.toLocaleString()} טוקנים בשימוש
+                    {user.tokensUsed?.toLocaleString() || 0}/{user.tokens || 0} טוקנים בשימוש
                   </div>
                 </div>
               </div>
@@ -277,7 +277,7 @@ const PlanUpgrade: React.FC<Props> = ({ isOpen, onClose, user, onUpdateUser, isD
                       )}
                     </div>
                     <div className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {pkg.messageLimit.toLocaleString()} טוקנים
+                      {pkg.tokenLimit.toLocaleString()} טוקנים
                     </div>
                   </div>
 

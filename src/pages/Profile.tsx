@@ -10,8 +10,9 @@ interface User {
   phone?: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messagesUsed: number;
-  messageLimit: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   registrationDate?: string;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;

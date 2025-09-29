@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import UserDataService, { PaymentRecord, UsageStats } from '@/services/userDataService';
+import UserDataService, { ExtendedUser, PaymentRecord } from '@/services/userDataService';
 import { 
   Crown, 
   Calendar, 
@@ -20,8 +20,9 @@ interface User {
   name: string;
   category: string;
   plan: 'free' | 'pro' | 'enterprise';
-  messageLimit: number;
-  messagesUsed: number;
+  tokens: string;
+  tokensUsed: number;
+  tokenLimit: number;
   registrationDate?: string;
   subscriptionStatus?: 'free' | 'active' | 'cancel_pending' | 'expired';
   subscriptionStartDate?: Date;
@@ -91,7 +92,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
           const updatedUser = {
             ...user,
             plan: 'free' as const,
-            messageLimit: 50,
+            tokenLimit: 50,
             subscriptionStatus: 'expired' as const
           };
           
@@ -140,8 +141,6 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
   // Get payment history from server data
   const payments: PaymentRecord[] = user ? UserDataService.getPaymentHistory(user.id) : [];
   
-  // Get usage statistics from server data
-  const usageStats: UsageStats | null = user ? UserDataService.getUsageStats(user.id) : null;
 
   const generateEventId = () => {
     return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -200,7 +199,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
       },
       subscription_details: {
         current_plan: user.plan,
-        current_limit: user.messageLimit,
+        current_limit: user.tokenLimit,
         cancellation_type: "user_requested",
         immediate: false
       },
@@ -247,8 +246,8 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
   };
 
   const getUsagePercentage = () => {
-    if (user.messageLimit === -1) return 0; // Unlimited
-    return Math.min((user.messagesUsed / user.messageLimit) * 100, 100);
+    if (user.tokenLimit === -1) return 0; // Unlimited
+    return Math.min((user.tokensUsed / user.tokenLimit) * 100, 100);
   };
 
   return (
@@ -311,7 +310,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
                 שימוש בטוקנים
               </span>
               <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {user.messagesUsed.toLocaleString()} / {user.messageLimit === -1 ? '∞' : user.messageLimit.toLocaleString()}
+                {user.tokensUsed.toLocaleString()} / {user.tokenLimit === -1 ? '∞' : user.tokenLimit.toLocaleString()}
               </span>
             </div>
             
@@ -321,7 +320,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
                   getUsagePercentage() > 90 ? 'bg-red-500' : 
                   getUsagePercentage() > 70 ? 'bg-orange-500' : 'bg-green-500'
                 }`}
-                style={{ width: `${user.messageLimit === -1 ? 10 : getUsagePercentage()}%` }}
+                style={{ width: `${user.tokenLimit === -1 ? 10 : getUsagePercentage()}%` }}
               />
             </div>
           </div>
@@ -383,7 +382,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Card className={`p-4 text-center ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {user.messagesUsed.toLocaleString()}
+              {user.tokensUsed.toLocaleString()}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               טוקנים שנשלחו
@@ -392,7 +391,7 @@ const SubscriptionManager: React.FC<Props> = ({ user, onUpdateUser, isDarkMode, 
           
           <Card className={`p-4 text-center ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {user.messageLimit === -1 ? '∞' : Math.max(0, user.messageLimit - user.messagesUsed).toLocaleString()}
+              {user.tokenLimit === -1 ? '∞' : Math.max(0, user.tokenLimit - user.tokensUsed).toLocaleString()}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               טוקנים נותרו
